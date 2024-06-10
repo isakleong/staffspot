@@ -17,9 +17,7 @@
 6. Isi data karyawan dan tekan tombol "Simpan" untuk menyimpan.
 
 ### Cara Build APK
-Untuk mem-build APK dari aplikasi ini, Anda dapat mengikuti langkah-langkah berikut:
-1. Buka terminal di direktori proyek.
-2. Jalankan perintah `flutter build apk --split-per-abi` untuk mem-build APK untuk semua arsitektur perangkat.
+1. Buka terminal.
+2. Jalankan perintah `flutter build apk` untuk mem-build APK untuk semua arsitektur perangkat.
+3. Jika ingin per arsitekktur maka `flutter build apk --split-per-abi`
 3. Setelah proses build selesai, APK dapat ditemukan di direktori `build/app/outputs/flutter-apk/`.
-
-Dengan mengikuti langkah-langkah di atas, Anda dapat menggunakan aplikasi StaffSpot dengan mudah dan mem-build APK untuk distribusi.
