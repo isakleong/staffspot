@@ -2,16 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lottie/lottie.dart';
 import 'package:staffspot/repository/employee_repository.dart';
 import 'package:staffspot/screens/AddEmployee.dart';
-import 'package:staffspot/screens/bloc/employee_bloc.dart';
+import 'package:staffspot/screens/bloc/employee_list/employee_bloc.dart';
 import 'package:staffspot/widgets/textview.dart';
 
-class Homepage extends StatelessWidget {
+class Homepage extends StatefulWidget {
   const Homepage({super.key});
 
   @override
+  State<Homepage> createState() => _HomepageState();
+}
+
+class _HomepageState extends State<Homepage> {
+
+  @override
+  void initState() {
+    super.initState();
+    // context.read<EmployeeBloc>().add(LoadEmployeeEvent());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+
     return BlocProvider(
       create: (context) =>
           EmployeeBloc(employeeRepository: EmployeeRepository())..add(LoadEmployeeEvent()),
@@ -27,10 +42,27 @@ class Homepage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AddEmployee()),
+                PageRouteBuilder(
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    var begin = 0.0;
+                    var end = 1.0;
+                    var curve = Curves.ease;
+
+                    var tween = Tween(begin: begin, end: end).chain(
+                      CurveTween(curve: curve),
+                    );
+
+                    return FadeTransition(
+                      opacity: animation.drive(tween),
+                      child: child,
+                    );
+                  },
+                  pageBuilder: (context, animation, secondaryAnimation) => const AddEmployee(),
+                ),
               );
+
             },
-            child: Icon(Icons.add),
+            child: const Icon(Icons.person_add),
           ),
           body: SafeArea(
             child: Stack(
@@ -42,165 +74,141 @@ class Homepage extends StatelessWidget {
                 BlocBuilder<EmployeeBloc, EmployeeState>(
                   builder: (context, state) {
                     if(state is EmployeeLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: Lottie.asset(
+                          'assets/animations/loading.json',
+                          width: width * 0.5,
+                          fit: BoxFit.contain,
+                        ),
+                      );
                     } else if(state is EmployeeLoaded) {
                       final employeeItem = state.items;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-                        child: ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: employeeItem.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
-                              child: Material(
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.white,
-                                elevation: 2,
-                                child: ClipRRect(
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          // Dispatch the event to reload the employee data
+                          context.read<EmployeeBloc>().add(LoadEmployeeEvent());
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 5),
+                          child: ListView.builder(
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: employeeItem.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
+                                child: Material(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.grey.shade300)
-                                    ),
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                          top: -15,
-                                          left: -45,
-                                          child: Container(
-                                            height: 100,
-                                            width: 100,
-                                            decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Colors.teal.withOpacity(0.4)),
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(left: 25),
-                                              child: Center(
-                                                child: TextView(
-                                                  headings: "H3",
-                                                  text: (index + 1).toString(),
-                                                  fontSize: 16,
-                                                  color: Colors.black,
-                                                  isAutoSize: true,
+                                  color: Colors.white,
+                                  elevation: 2,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.grey.shade300)
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          Positioned(
+                                            top: -15,
+                                            left: -45,
+                                            child: Container(
+                                              height: 100,
+                                              width: 100,
+                                              decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: Colors.teal.withOpacity(0.4)),
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(left: 25),
+                                                child: Center(
+                                                  child: TextView(
+                                                    headings: "H3",
+                                                    text: (index + 1).toString(),
+                                                    fontSize: 16,
+                                                    color: Colors.black,
+                                                    isAutoSize: true,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 80, right: 10),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const SizedBox(height: 20),
-                                               Row(
-                                                children: [
-                                                  Container(
-                                                    width: 35,
-                                                    height: 35,
-                                                    decoration: const BoxDecoration(
+                                          Padding(
+                                            padding: const EdgeInsets.only(left: 60, right: 10),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const SizedBox(height: 20),
+                                                 Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.badge,
                                                       color: Colors.teal,
-                                                      shape: BoxShape.circle,
+                                                      size: 16
                                                     ),
-                                                    child: const Icon(Icons.badge,
-                                                        color: Colors.white,
-                                                        size: 18),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  const SizedBox(
-                                                    width: 150,
-                                                    child: TextView(headings: "H3", text: "NIK", fontSize: 16, maxLines: 1, isAutoSize: true,textAlign: TextAlign.start)
-                                                  ),
-                                                  Expanded(
-                                                    child: TextView(headings: "H3", text: employeeItem[index].nik.toString(), fontSize: 16, color: Colors.black, isAutoSize: true, textAlign: TextAlign.start, maxLines: 1),
-                                                  )
-                                                ],
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Row(
-                                                children: [
-                                                  Container(
-                                                    width: 35,
-                                                    height: 35,
-                                                    decoration: const BoxDecoration(
+                                                    const SizedBox(width: 8),
+                                                    const Expanded(child: TextView(headings: "H3", text: "NIK", maxLines: 1, isAutoSize: true,textAlign: TextAlign.start)),
+                                                    Expanded(
+                                                      child: TextView(headings: "H3", text: employeeItem[index].nik.toString(), color: Colors.black, isAutoSize: true, textAlign: TextAlign.start, maxLines: 1),
+                                                    )
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 16),
+                                                Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.person,
                                                       color: Colors.teal,
-                                                      shape: BoxShape.circle,
+                                                      size: 16
                                                     ),
-                                                    child: const Icon(Icons.person,
-                                                        color: Colors.white,
-                                                        size: 18),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  const SizedBox(
-                                                    width: 150,
-                                                    child: TextView(headings: "H3", text: "Nama Lengkap", fontSize: 16, maxLines: 1, isAutoSize: true,textAlign: TextAlign.start)
-                                                  ),
-                                                  Expanded(
-                                                    child: TextView(headings: "H3", text: "${employeeItem[index].firstName} ${employeeItem[index].lastName}", fontSize: 16, color: Colors.black, isAutoSize: true, textAlign: TextAlign.start, maxLines: 1),
-                                                  )
-                                                ],
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Row(
-                                                children: [
-                                                  Container(
-                                                    width: 35,
-                                                    height: 35,
-                                                    decoration: const BoxDecoration(
+                                                    const SizedBox(width: 8),
+                                                    const Expanded(child: TextView(headings: "H3", text: "Nama", maxLines: 1, isAutoSize: true,textAlign: TextAlign.start)),
+                                                    Expanded(
+                                                      child: TextView(headings: "H3", text: "${employeeItem[index].firstName} ${employeeItem[index].lastName}", color: Colors.black, isAutoSize: true, textAlign: TextAlign.start, maxLines: 1),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 16),
+                                                Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.home,
                                                       color: Colors.teal,
-                                                      shape: BoxShape.circle,
+                                                      size: 16
                                                     ),
-                                                    child: const Icon(Icons.home,
-                                                        color: Colors.white,
-                                                        size: 18),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  const SizedBox(
-                                                    width: 150,
-                                                    child: TextView(headings: "H3", text: "Alamat", fontSize: 16, maxLines: 1, isAutoSize: true,textAlign: TextAlign.start)
-                                                  ),
-                                                  Expanded(
-                                                    child: TextView(headings: "H3", text: employeeItem[index].alamat, fontSize: 16, color: Colors.black, isAutoSize: true, textAlign: TextAlign.start, maxLines: 1),
-                                                  )
-                                                ],
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Row(
-                                                children: [
-                                                  Container(
-                                                    width: 35,
-                                                    height: 35,
-                                                    decoration: const BoxDecoration(
+                                                    const SizedBox(width: 8),
+                                                    const Expanded(child: TextView(headings: "H3", text: "Alamat", maxLines: 1, isAutoSize: true,textAlign: TextAlign.start)),
+                                                    Expanded(
+                                                      child: TextView(headings: "H3", text: employeeItem[index].alamat, color: Colors.black, isAutoSize: true, textAlign: TextAlign.start, maxLines: 1),
+                                                    )
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 16),
+                                                Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.check,
                                                       color: Colors.teal,
-                                                      shape: BoxShape.circle,
+                                                      size: 16
                                                     ),
-                                                    child: const Icon(Icons.check,
-                                                        color: Colors.white,
-                                                        size: 18),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  const SizedBox(
-                                                    width: 150,
-                                                    child: TextView(headings: "H3", text: "Status", fontSize: 16, maxLines: 1, isAutoSize: true,textAlign: TextAlign.start)
-                                                  ),
-                                                  Expanded(
-                                                    child: TextView(headings: "H3", text: employeeItem[index].aktif ? "Aktif" : "Tidak Aktif", fontSize: 16, color: Colors.black, isAutoSize: true, textAlign: TextAlign.start, maxLines: 1),
-                                                  )
-                                                ],
-                                              ),
-                                              const SizedBox(height: 20),
-                                            ],
+                                                    const SizedBox(width: 8),
+                                                    const Expanded(child: TextView(headings: "H3", text: "Status", maxLines: 1, isAutoSize: true,textAlign: TextAlign.start)),
+                                                    Expanded(
+                                                      child: TextView(headings: "H3", text: employeeItem[index].aktif ? "Aktif" : "Tidak Aktif", color: Colors.black, isAutoSize: true, textAlign: TextAlign.start, maxLines: 1),
+                                                    )
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 20),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
                       );
                     } else if(state is EmployeeError) {

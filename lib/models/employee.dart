@@ -18,10 +18,10 @@ class Employee {
   Employee({required this.nik, required this.firstName, required this.lastName, required this.alamat, required this.aktif});
 
   factory Employee.fromJson(Map<String, dynamic> json) => Employee(
-    nik : json['nik'],
-    firstName : json['first_name'],
-    lastName : json['last_name'],
-    alamat : json['alamat'],
-    aktif : json['aktif'],
+    nik : json['nik'] ?? 0,
+    firstName : json['first_name'] ?? '',
+    lastName : json['last_name'] ?? '',
+    alamat : json['alamat'] ?? '',
+    aktif : json['aktif'] ?? false,
   );
 }

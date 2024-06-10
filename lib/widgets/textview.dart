@@ -36,7 +36,7 @@ class TextView extends StatelessWidget {
         :
         FontWeight.w300,
         fontFamily: 'Poppins',
-        fontSize: fontSize ?? 16,
+        fontSize: fontSize ?? 14,
       ),
       textScaleFactor: 1.0,
       textAlign: textAlign ?? TextAlign.center,
